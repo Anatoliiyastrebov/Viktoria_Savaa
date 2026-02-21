@@ -11,7 +11,7 @@ export const translations = {
     welcomeDescription: 'Это бесплатная анкета по здоровью. Заполните форму, и мы свяжемся с вами для консультации.',
     selectCategory: 'Выберите категорию анкеты',
     questionnaireInstruction: 'Выберите подходящий вариант и заполните его. После изучения ответов я с вами свяжусь.',
-    consultantSignature: 'Виктория',
+    consultantSignature: 'Виктория, ваш wellness-консультант.',
     
     // Categories
     infantTitle: 'Для младенца',
@@ -216,7 +216,7 @@ export const translations = {
     welcomeDescription: 'This is a free health questionnaire. Fill out the form and we will contact you for a consultation.',
     selectCategory: 'Select questionnaire category',
     questionnaireInstruction: 'Choose the appropriate option and fill it out. After reviewing your answers, I will contact you.',
-    consultantSignature: 'Viktoria',
+    consultantSignature: 'Viktoria, your wellness consultant.',
     
     // Categories
     infantTitle: 'For Infant',
