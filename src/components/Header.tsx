@@ -7,14 +7,18 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="logoBg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34d399"/>
-        <stop offset="100%" stopColor="#059669"/>
+        <stop offset="0%" stopColor="#3b82f6"/>
+        <stop offset="100%" stopColor="#1d4ed8"/>
+      </linearGradient>
+      <linearGradient id="logoShine" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5"/>
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
       </linearGradient>
     </defs>
-    <circle cx="50" cy="50" r="48" fill="url(#logoBg)"/>
-    <path d="M50 18 C30 18 18 35 18 50 C18 70 35 82 50 82 C55 72 58 60 58 50 C58 35 55 25 50 18Z" fill="white" opacity="0.9"/>
-    <path d="M50 18 C70 18 82 35 82 50 C82 70 65 82 50 82" fill="none" stroke="white" strokeWidth="3" opacity="0.4"/>
-    <path d="M25 52 L40 52 L44 40 L50 62 L56 42 L60 52 L75 52" fill="none" stroke="#059669" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="4" y="4" width="92" height="92" rx="22" fill="url(#logoBg)"/>
+    <rect x="4" y="4" width="92" height="46" rx="22" fill="url(#logoShine)"/>
+    <path d="M30 28 L50 72 L70 28" fill="none" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M20 56 L32 56 L37 46 L43 64 L49 48 L53 56 L80 56" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.45"/>
   </svg>
 );
 
