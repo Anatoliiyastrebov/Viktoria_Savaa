@@ -22,6 +22,14 @@ export const translations = {
     womanDescription: 'Для взрослых женщин',
     manTitle: 'Мужская анкета',
     manDescription: 'Для взрослых мужчин',
+
+    channelInviteLead:
+      'Вам откликается бережная забота о себе — приглашаю в канал «Гармония тела» 🤍',
+    channelInviteBody1:
+      'Там — про энергию, состояние кожи, поддержку организма и восстановление ресурса.',
+    channelInviteBody2:
+      'Про то, как чувствовать себя наполненной, а не просто «держаться».',
+    channelJoinButton: 'Присоединиться',
     
     // Form labels
     name: 'Имя',
@@ -227,6 +235,14 @@ export const translations = {
     womanDescription: 'For adult women',
     manTitle: 'Men\'s Questionnaire',
     manDescription: 'For adult men',
+
+    channelInviteLead:
+      'If gentle self-care speaks to you — I invite you to the channel «Harmony of the Body» 🤍',
+    channelInviteBody1:
+      'Energy, skin, supporting your body and restoring your resources.',
+    channelInviteBody2:
+      'How to feel full and alive — not just «holding on».',
+    channelJoinButton: 'Join',
     
     // Form labels
     name: 'Name',
