@@ -27,6 +27,7 @@ import {
   clearFormData,
   sendToTelegram,
   sendDocumentToTelegram,
+  contactHasSecondaryFields,
 } from '@/lib/form-utils';
 import { Eye, Send, Trash2, Loader2, AlertCircle, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,9 +51,12 @@ const Anketa: React.FC = () => {
   const [formData, setFormData] = useState<QuestionnaireFormData>({});
   const [additionalData, setAdditionalData] = useState<FormAdditionalData>({});
   const [contactData, setContactData] = useState<ContactData>({
+    preferredContactMethod: '',
     telegram: '',
     instagram: '',
+    phone: '',
   });
+  const [contactExtrasInitiallyOpen, setContactExtrasInitiallyOpen] = useState(false);
   const [sourceData, setSourceData] = useState<SourceData>({ source: '', recommender: '' });
   const [dsgvoAccepted, setDsgvoAccepted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -67,12 +71,11 @@ const Anketa: React.FC = () => {
     if (saved) {
       setFormData(saved.formData || {});
       setAdditionalData(saved.additionalData || {});
-      // Ensure contactData has the correct structure
-      const contact = saved.contactData || { telegram: '', instagram: '' };
-      setContactData({
-        telegram: contact.telegram || '',
-        instagram: contact.instagram || '',
-      });
+      const contact = saved.contactData;
+      setContactData(contact);
+      setContactExtrasInitiallyOpen(contactHasSecondaryFields(contact));
+    } else {
+      setContactExtrasInitiallyOpen(false);
     }
   }, [type, language]);
 
@@ -224,7 +227,13 @@ const Anketa: React.FC = () => {
   const handleClearForm = () => {
     setFormData({});
     setAdditionalData({});
-    setContactData({ telegram: '', instagram: '' });
+    setContactData({
+      preferredContactMethod: '',
+      telegram: '',
+      instagram: '',
+      phone: '',
+    });
+    setContactExtrasInitiallyOpen(false);
     setDsgvoAccepted(false);
     setErrors({});
     setAttachmentFiles([]);
@@ -463,26 +472,30 @@ const Anketa: React.FC = () => {
 
           {/* Contact Section */}
           <ContactSection
-            telegram={contactData.telegram}
-            instagram={contactData.instagram}
-            error={errors['contact']}
-            telegramError={errors['telegram']}
-            instagramError={errors['instagram']}
-            onTelegramChange={(value) => {
-              setContactData((prev) => ({ ...prev, telegram: value }));
-              setErrors((prev) => {
-                const next = { ...prev };
-                delete next['contact'];
-                delete next['telegram'];
-                return next;
-              });
+            contactData={contactData}
+            defaultExtrasOpen={contactExtrasInitiallyOpen}
+            errors={{
+              contact_method: errors['contact_method'],
+              contact_primary: errors['contact_primary'],
+              telegram: errors['telegram'],
+              instagram: errors['instagram'],
+              phone: errors['phone'],
             }}
-            onInstagramChange={(value) => {
-              setContactData((prev) => ({ ...prev, instagram: value }));
+            onPatch={(patch) => {
+              setContactData((prev) => ({ ...prev, ...patch }));
               setErrors((prev) => {
                 const next = { ...prev };
-                delete next['contact'];
-                delete next['instagram'];
+                if ('preferredContactMethod' in patch) {
+                  delete next['contact_method'];
+                  delete next['contact_primary'];
+                  delete next['telegram'];
+                  delete next['instagram'];
+                  delete next['phone'];
+                } else {
+                  if ('telegram' in patch) delete next['telegram'];
+                  if ('instagram' in patch) delete next['instagram'];
+                  if ('phone' in patch) delete next['phone'];
+                }
                 return next;
               });
             }}

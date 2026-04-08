@@ -10,9 +10,84 @@ export interface FormAdditionalData {
   [key: string]: string;
 }
 
+export type PreferredContactMethod = '' | 'telegram' | 'instagram' | 'phone';
+
 export interface ContactData {
+  preferredContactMethod: PreferredContactMethod;
   telegram: string;
   instagram: string;
+  phone: string;
+}
+
+const emptyContactData = (): ContactData => ({
+  preferredContactMethod: '',
+  telegram: '',
+  instagram: '',
+  phone: '',
+});
+
+/** Normalize @username for Telegram if legacy data had no @ */
+const normalizeTelegramStored = (s: string): string => {
+  const t = s.trim();
+  if (!t) return '';
+  if (t.startsWith('@')) return t;
+  if (/^[a-zA-Z0-9_]{5,32}$/.test(t)) return `@${t}`;
+  return t;
+};
+
+/** Extract Instagram username from URL or @handle */
+export const extractInstagramUsername = (raw: string): string | null => {
+  const v = raw.trim();
+  if (!v) return null;
+  const urlMatch = v.match(/instagram\.com\/([^/?#]+)/i) || v.match(/instagr\.am\/([^/?#]+)/i);
+  if (urlMatch) {
+    const u = decodeURIComponent(urlMatch[1].replace(/^@/, ''));
+    if (u && u !== 'p' && u !== 'reel' && u !== 'stories') return u;
+  }
+  const noAt = v.replace(/^@/, '').trim();
+  if (!noAt || /\s/.test(noAt)) return null;
+  if (/^[a-zA-Z0-9._]{1,30}$/.test(noAt) && !/^\.|\.\.|\.$/.test(noAt)) return noAt;
+  return null;
+};
+
+export function migrateContactData(raw: unknown): ContactData {
+  const base = emptyContactData();
+  if (!raw || typeof raw !== 'object') return base;
+  const o = raw as Record<string, unknown>;
+  const telegram = normalizeTelegramStored(String(o.telegram ?? ''));
+  const instagram = String(o.instagram ?? '').trim();
+  const phone = String(o.phone ?? '').trim().replace(/\s/g, '');
+  let preferred = (o.preferredContactMethod as string) || '';
+
+  if (preferred !== 'telegram' && preferred !== 'instagram' && preferred !== 'phone') {
+    preferred = '';
+    const hasTg = !!telegram;
+    const hasIg = !!instagram;
+    const hasPh = !!phone;
+    if (hasTg && !hasIg && !hasPh) preferred = 'telegram';
+    else if (hasIg && !hasTg && !hasPh) preferred = 'instagram';
+    else if (hasPh && !hasTg && !hasIg) preferred = 'phone';
+    else if (hasTg) preferred = 'telegram';
+    else if (hasIg) preferred = 'instagram';
+    else if (hasPh) preferred = 'phone';
+  }
+
+  return {
+    preferredContactMethod: preferred as PreferredContactMethod,
+    telegram,
+    instagram,
+    phone,
+  };
+}
+
+/** True if contact data has values outside the preferred method (for UI: open “extra contacts”). */
+export function contactHasSecondaryFields(data: ContactData): boolean {
+  const m = data.preferredContactMethod;
+  if (!m) return false;
+  if (m !== 'telegram' && data.telegram.trim()) return true;
+  if (m !== 'instagram' && data.instagram.trim()) return true;
+  if (m !== 'phone' && data.phone.trim()) return true;
+  return false;
 }
 
 export interface SourceData {
@@ -53,19 +128,17 @@ export const loadFormData = (type: QuestionnaireType, lang: Language) => {
       const data = JSON.parse(stored);
       // Only return if data is less than 24 hours old
       if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
-        // Migrate old ContactData structure (method + username, or telegram + instagram) to telegram only
-        let contactData: ContactData = data.contactData as ContactData;
-        if (contactData && 'method' in contactData && 'username' in contactData) {
-          const oldData = contactData as { method?: string; username?: string };
-          contactData = {
-            telegram: oldData.method === 'telegram' ? (oldData.username || '') : '',
-            instagram: oldData.method === 'instagram' ? (oldData.username || '') : '',
-          };
-        } else if (!contactData || !('telegram' in contactData)) {
-          contactData = { telegram: '', instagram: '' };
+        let contactData: ContactData;
+        const rawContact = data.contactData;
+        if (rawContact && typeof rawContact === 'object' && 'method' in rawContact && 'username' in rawContact) {
+          const oldData = rawContact as { method?: string; username?: string };
+          contactData = migrateContactData({
+            telegram: oldData.method === 'telegram' ? oldData.username || '' : '',
+            instagram: oldData.method === 'instagram' ? oldData.username || '' : '',
+            phone: '',
+          });
         } else {
-          const c = contactData as { telegram?: string; instagram?: string };
-          contactData = { telegram: c.telegram || '', instagram: c.instagram || '' };
+          contactData = migrateContactData(rawContact);
         }
         
         return {
@@ -108,6 +181,40 @@ export const validateInstagramUsername = (raw: string): ContactValidation => {
   if (value.length > 30) return { valid: false, error: 'instagram_too_long' };
   if (!/^[a-zA-Z0-9._]+$/.test(value)) return { valid: false, error: 'instagram_invalid_chars' };
   if (/^\.|\.\.|\.$/.test(value)) return { valid: false, error: 'instagram_dots' };
+  return { valid: true };
+};
+
+/** Telegram: must start with @, no spaces */
+export const validateTelegramAtFormat = (raw: string): ContactValidation => {
+  const s = raw.trim();
+  if (!s) return { valid: false, error: 'empty' };
+  if (/\s/.test(s)) return { valid: false, error: 'telegram_spaces' };
+  if (!s.startsWith('@')) return { valid: false, error: 'telegram_must_start_at' };
+  const user = s.slice(1);
+  if (user.length < 5) return { valid: false, error: 'telegram_too_short' };
+  if (user.length > 32) return { valid: false, error: 'telegram_too_long' };
+  if (!/^[a-zA-Z0-9_]+$/.test(user)) return { valid: false, error: 'telegram_invalid_chars' };
+  return { valid: true };
+};
+
+/** Instagram: username or profile URL */
+export const validateInstagramInput = (raw: string): ContactValidation => {
+  if (!raw.trim()) return { valid: false, error: 'empty' };
+  const u = extractInstagramUsername(raw);
+  if (!u) return { valid: false, error: 'instagram_invalid_input' };
+  if (u.length > 30) return { valid: false, error: 'instagram_too_long' };
+  if (/^\.|\.\.|\.$/.test(u)) return { valid: false, error: 'instagram_dots' };
+  return { valid: true };
+};
+
+/** Phone: digits only, optional + at start */
+export const validatePhoneInput = (raw: string): ContactValidation => {
+  const s = raw.trim().replace(/\s/g, '');
+  if (!s) return { valid: false, error: 'empty' };
+  if (!/^\+?[0-9]+$/.test(s)) return { valid: false, error: 'phone_invalid_chars' };
+  const digits = s.startsWith('+') ? s.slice(1) : s;
+  if (digits.length < 10) return { valid: false, error: 'phone_too_short' };
+  if (digits.length > 15) return { valid: false, error: 'phone_too_long' };
   return { valid: true };
 };
 
@@ -286,23 +393,47 @@ export const validateForm = (
     }
   }
 
-  // Validate contact - at least one: telegram or instagram
-  const hasTelegram = contactData.telegram && contactData.telegram.trim() !== '';
-  const hasInstagram = contactData.instagram && contactData.instagram.trim() !== '';
+  const tr = t as Record<string, string>;
+  const method = contactData.preferredContactMethod;
 
-  if (!hasTelegram && !hasInstagram) {
-    errors['contact'] = (t as Record<string, string>).atLeastOneContactRequired ?? t.telegramRequired;
+  if (!method) {
+    errors['contact_method'] = tr.contactMethodRequired ?? 'Выберите способ связи';
   } else {
-    if (hasTelegram) {
-      const r = validateTelegramUsername(contactData.telegram);
-      if (!r.valid && r.error && r.error !== 'empty') {
-        errors['telegram'] = (t as Record<string, string>)[r.error] || t.required;
+    const primaryEmpty =
+      (method === 'telegram' && !contactData.telegram.trim()) ||
+      (method === 'instagram' && !contactData.instagram.trim()) ||
+      (method === 'phone' && !contactData.phone.trim());
+    if (primaryEmpty) {
+      errors['contact_primary'] = tr.contactPrimaryEmpty ?? 'Заполните выбранный способ связи';
+    } else {
+      if (method === 'telegram') {
+        const r = validateTelegramAtFormat(contactData.telegram);
+        if (!r.valid && r.error && r.error !== 'empty') {
+          errors['telegram'] = tr[r.error] || t.required;
+        }
+      } else if (method === 'instagram') {
+        const r = validateInstagramInput(contactData.instagram);
+        if (!r.valid && r.error && r.error !== 'empty') {
+          errors['instagram'] = tr[r.error] || t.required;
+        }
+      } else if (method === 'phone') {
+        const r = validatePhoneInput(contactData.phone);
+        if (!r.valid && r.error && r.error !== 'empty') {
+          errors['phone'] = tr[r.error] || t.required;
+        }
       }
-    }
-    if (hasInstagram) {
-      const r = validateInstagramUsername(contactData.instagram);
-      if (!r.valid && r.error && r.error !== 'empty') {
-        errors['instagram'] = (t as Record<string, string>)[r.error] || t.required;
+
+      if (contactData.telegram.trim() && method !== 'telegram') {
+        const r = validateTelegramAtFormat(contactData.telegram);
+        if (!r.valid && r.error && r.error !== 'empty') errors['telegram'] = tr[r.error] || t.required;
+      }
+      if (contactData.instagram.trim() && method !== 'instagram') {
+        const r = validateInstagramInput(contactData.instagram);
+        if (!r.valid && r.error && r.error !== 'empty') errors['instagram'] = tr[r.error] || t.required;
+      }
+      if (contactData.phone.trim() && method !== 'phone') {
+        const r = validatePhoneInput(contactData.phone);
+        if (!r.valid && r.error && r.error !== 'empty') errors['phone'] = tr[r.error] || t.required;
       }
     }
   }
@@ -408,15 +539,35 @@ export const generateMarkdown = (
     md += '\n';
   }
 
-  // Contact section (enhanced)
+  const method = contactData.preferredContactMethod;
+  const methodLabel =
+    method === 'telegram'
+      ? 'Telegram'
+      : method === 'instagram'
+        ? 'Instagram'
+        : method === 'phone'
+          ? lang === 'ru'
+            ? 'Телефон'
+            : 'Phone'
+          : '';
+
   const contacts: string[] = [];
+  if (methodLabel) {
+    md += `\n**${lang === 'ru' ? 'Предпочитаемый способ связи' : 'Preferred contact'}:** ${methodLabel}\n`;
+  }
+
   if (contactData.telegram && contactData.telegram.trim() !== '') {
     const cleanTelegram = contactData.telegram.replace(/^@/, '').trim();
     contacts.push(`📱 Telegram: @${cleanTelegram}\n🔗 https://t.me/${cleanTelegram}`);
   }
   if (contactData.instagram && contactData.instagram.trim() !== '') {
-    const cleanInstagram = contactData.instagram.replace(/^@/, '').trim();
+    const igUser = extractInstagramUsername(contactData.instagram);
+    const cleanInstagram = igUser || contactData.instagram.replace(/^@/, '').trim();
     contacts.push(`📷 Instagram: @${cleanInstagram}\n🔗 https://instagram.com/${cleanInstagram}`);
+  }
+  if (contactData.phone && contactData.phone.trim() !== '') {
+    const ph = contactData.phone.trim().replace(/\s/g, '');
+    contacts.push(`📞 ${lang === 'ru' ? 'Телефон' : 'Phone'}: ${ph}`);
   }
 
   if (contacts.length > 0) {
