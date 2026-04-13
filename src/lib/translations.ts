@@ -170,18 +170,19 @@ export const translations = {
     preferredContactTitle: 'Предпочитаемый способ связи',
     contactSectionTitle: 'Контактные данные',
     contactSectionHelp:
-      'Номер телефона обязателен. Telegram и Instagram — по желанию; при необходимости укажите все три способа.',
+      'Основной номер телефона обязателен — мы свяжемся с вами по нему.',
     contactOptionalSocialTitle: 'Telegram и Instagram',
     contactOptionalSocialHint:
       'Необязательно. Можно заполнить одно поле, оба или оставить пустыми — телефона достаточно для связи.',
+    contactExtrasShowFields: 'Показать поля Telegram и Instagram (необязательно)',
     preferredContactHelp:
       'Выберите удобный способ связи. При желании можно добавить дополнительные.',
     contactMethodRequired: 'Выберите способ связи',
     contactPrimaryEmpty: 'Заполните выбранный способ связи',
     addAnotherContact: 'Добавить ещё способ связи',
-    contactHideExtras: 'Скрыть дополнительные контакты',
+    contactHideExtras: 'Скрыть поля Telegram и Instagram',
     contactExtrasOptionalHint:
-      'Необязательно: укажите ещё один способ, если хотите.',
+      'Необязательно: укажите ник в Telegram и/или ссылку на Instagram, если хотите дополнить способы связи.',
     telegram: 'Telegram',
     instagram: 'Instagram',
     phone: 'Телефон',
@@ -408,17 +409,19 @@ export const translations = {
     preferredContactTitle: 'Preferred contact method',
     contactSectionTitle: 'Contact details',
     contactSectionHelp:
-      'Phone number is required. Telegram and Instagram are optional — you may fill in all three.',
+      'Your phone number is required — we will use it to contact you.',
     contactOptionalSocialTitle: 'Telegram and Instagram',
     contactOptionalSocialHint:
       'Optional. Fill in one, both, or leave empty — a phone number is enough to reach you.',
+    contactExtrasShowFields: 'Show Telegram and Instagram fields (optional)',
     preferredContactHelp:
       'Choose how you prefer to be contacted. You can add extra options if you like.',
     contactMethodRequired: 'Select a contact method',
     contactPrimaryEmpty: 'Fill in the selected contact method',
     addAnotherContact: 'Add another contact method',
-    contactHideExtras: 'Hide extra contacts',
-    contactExtrasOptionalHint: 'Optional: add another way to reach you.',
+    contactHideExtras: 'Hide Telegram and Instagram fields',
+    contactExtrasOptionalHint:
+      'Optional: add your Telegram username and/or Instagram profile if you would like an additional way to reach you.',
     telegram: 'Telegram',
     instagram: 'Instagram',
     phone: 'Phone',
