@@ -57,37 +57,13 @@ export function migrateContactData(raw: unknown): ContactData {
   const telegram = normalizeTelegramStored(String(o.telegram ?? ''));
   const instagram = String(o.instagram ?? '').trim();
   const phone = String(o.phone ?? '').trim().replace(/\s/g, '');
-  let preferred = (o.preferredContactMethod as string) || '';
-
-  if (preferred !== 'telegram' && preferred !== 'instagram' && preferred !== 'phone') {
-    preferred = '';
-    const hasTg = !!telegram;
-    const hasIg = !!instagram;
-    const hasPh = !!phone;
-    if (hasTg && !hasIg && !hasPh) preferred = 'telegram';
-    else if (hasIg && !hasTg && !hasPh) preferred = 'instagram';
-    else if (hasPh && !hasTg && !hasIg) preferred = 'phone';
-    else if (hasTg) preferred = 'telegram';
-    else if (hasIg) preferred = 'instagram';
-    else if (hasPh) preferred = 'phone';
-  }
 
   return {
-    preferredContactMethod: preferred as PreferredContactMethod,
+    preferredContactMethod: '',
     telegram,
     instagram,
     phone,
   };
-}
-
-/** True if contact data has values outside the preferred method (for UI: open “extra contacts”). */
-export function contactHasSecondaryFields(data: ContactData): boolean {
-  const m = data.preferredContactMethod;
-  if (!m) return false;
-  if (m !== 'telegram' && data.telegram.trim()) return true;
-  if (m !== 'instagram' && data.instagram.trim()) return true;
-  if (m !== 'phone' && data.phone.trim()) return true;
-  return false;
 }
 
 export interface SourceData {
@@ -394,47 +370,26 @@ export const validateForm = (
   }
 
   const tr = t as Record<string, string>;
-  const method = contactData.preferredContactMethod;
 
-  if (!method) {
-    errors['contact_method'] = tr.contactMethodRequired ?? 'Выберите способ связи';
+  if (!contactData.phone.trim()) {
+    errors['phone'] = tr.phoneRequired ?? tr.required;
   } else {
-    const primaryEmpty =
-      (method === 'telegram' && !contactData.telegram.trim()) ||
-      (method === 'instagram' && !contactData.instagram.trim()) ||
-      (method === 'phone' && !contactData.phone.trim());
-    if (primaryEmpty) {
-      errors['contact_primary'] = tr.contactPrimaryEmpty ?? 'Заполните выбранный способ связи';
-    } else {
-      if (method === 'telegram') {
-        const r = validateTelegramAtFormat(contactData.telegram);
-        if (!r.valid && r.error && r.error !== 'empty') {
-          errors['telegram'] = tr[r.error] || t.required;
-        }
-      } else if (method === 'instagram') {
-        const r = validateInstagramInput(contactData.instagram);
-        if (!r.valid && r.error && r.error !== 'empty') {
-          errors['instagram'] = tr[r.error] || t.required;
-        }
-      } else if (method === 'phone') {
-        const r = validatePhoneInput(contactData.phone);
-        if (!r.valid && r.error && r.error !== 'empty') {
-          errors['phone'] = tr[r.error] || t.required;
-        }
-      }
+    const pr = validatePhoneInput(contactData.phone);
+    if (!pr.valid && pr.error && pr.error !== 'empty') {
+      errors['phone'] = tr[pr.error] || t.required;
+    }
+  }
 
-      if (contactData.telegram.trim() && method !== 'telegram') {
-        const r = validateTelegramAtFormat(contactData.telegram);
-        if (!r.valid && r.error && r.error !== 'empty') errors['telegram'] = tr[r.error] || t.required;
-      }
-      if (contactData.instagram.trim() && method !== 'instagram') {
-        const r = validateInstagramInput(contactData.instagram);
-        if (!r.valid && r.error && r.error !== 'empty') errors['instagram'] = tr[r.error] || t.required;
-      }
-      if (contactData.phone.trim() && method !== 'phone') {
-        const r = validatePhoneInput(contactData.phone);
-        if (!r.valid && r.error && r.error !== 'empty') errors['phone'] = tr[r.error] || t.required;
-      }
+  if (contactData.telegram.trim()) {
+    const r = validateTelegramAtFormat(contactData.telegram);
+    if (!r.valid && r.error && r.error !== 'empty') {
+      errors['telegram'] = tr[r.error] || t.required;
+    }
+  }
+  if (contactData.instagram.trim()) {
+    const r = validateInstagramInput(contactData.instagram);
+    if (!r.valid && r.error && r.error !== 'empty') {
+      errors['instagram'] = tr[r.error] || t.required;
     }
   }
 
@@ -539,23 +494,13 @@ export const generateMarkdown = (
     md += '\n';
   }
 
-  const method = contactData.preferredContactMethod;
-  const methodLabel =
-    method === 'telegram'
-      ? 'Telegram'
-      : method === 'instagram'
-        ? 'Instagram'
-        : method === 'phone'
-          ? lang === 'ru'
-            ? 'Телефон'
-            : 'Phone'
-          : '';
-
   const contacts: string[] = [];
-  if (methodLabel) {
-    md += `\n**${lang === 'ru' ? 'Предпочитаемый способ связи' : 'Preferred contact'}:** ${methodLabel}\n`;
+  if (contactData.phone && contactData.phone.trim() !== '') {
+    const ph = contactData.phone.trim().replace(/\s/g, '');
+    contacts.push(
+      `📞 ${lang === 'ru' ? 'Телефон (основной)' : 'Phone (primary)'}: ${ph}`,
+    );
   }
-
   if (contactData.telegram && contactData.telegram.trim() !== '') {
     const cleanTelegram = contactData.telegram.replace(/^@/, '').trim();
     contacts.push(`📱 Telegram: @${cleanTelegram}\n🔗 https://t.me/${cleanTelegram}`);
@@ -564,10 +509,6 @@ export const generateMarkdown = (
     const igUser = extractInstagramUsername(contactData.instagram);
     const cleanInstagram = igUser || contactData.instagram.replace(/^@/, '').trim();
     contacts.push(`📷 Instagram: @${cleanInstagram}\n🔗 https://instagram.com/${cleanInstagram}`);
-  }
-  if (contactData.phone && contactData.phone.trim() !== '') {
-    const ph = contactData.phone.trim().replace(/\s/g, '');
-    contacts.push(`📞 ${lang === 'ru' ? 'Телефон' : 'Phone'}: ${ph}`);
   }
 
   if (contacts.length > 0) {

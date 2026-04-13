@@ -168,6 +168,12 @@ export const translations = {
     // Contact
     contactMethod: 'Способ связи',
     preferredContactTitle: 'Предпочитаемый способ связи',
+    contactSectionTitle: 'Контактные данные',
+    contactSectionHelp:
+      'Номер телефона обязателен. Telegram и Instagram — по желанию; при необходимости укажите все три способа.',
+    contactOptionalSocialTitle: 'Telegram и Instagram',
+    contactOptionalSocialHint:
+      'Необязательно. Можно заполнить одно поле, оба или оставить пустыми — телефона достаточно для связи.',
     preferredContactHelp:
       'Выберите удобный способ связи. При желании можно добавить дополнительные.',
     contactMethodRequired: 'Выберите способ связи',
@@ -201,6 +207,7 @@ export const translations = {
     phone_invalid_chars: 'Допустимы только цифры и один + в начале',
     phone_too_short: 'Введите не менее 10 цифр номера',
     phone_too_long: 'Слишком длинный номер',
+    phoneRequired: 'Укажите номер телефона',
 
     // DSGVO
     dsgvoConsent: 'Я соглашаюсь на обработку моих данных.',
@@ -399,6 +406,12 @@ export const translations = {
     // Contact
     contactMethod: 'Contact method',
     preferredContactTitle: 'Preferred contact method',
+    contactSectionTitle: 'Contact details',
+    contactSectionHelp:
+      'Phone number is required. Telegram and Instagram are optional — you may fill in all three.',
+    contactOptionalSocialTitle: 'Telegram and Instagram',
+    contactOptionalSocialHint:
+      'Optional. Fill in one, both, or leave empty — a phone number is enough to reach you.',
     preferredContactHelp:
       'Choose how you prefer to be contacted. You can add extra options if you like.',
     contactMethodRequired: 'Select a contact method',
@@ -431,6 +444,7 @@ export const translations = {
     phone_invalid_chars: 'Only digits and one + at the start are allowed',
     phone_too_short: 'Enter at least 10 digits',
     phone_too_long: 'Phone number is too long',
+    phoneRequired: 'Enter your phone number',
 
     // DSGVO
     dsgvoConsent: 'I agree to the processing of my data.',
