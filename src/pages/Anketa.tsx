@@ -27,6 +27,7 @@ import {
   clearFormData,
   sendToTelegram,
   sendDocumentToTelegram,
+  getContactPhoneErrorMessage,
 } from '@/lib/form-utils';
 import { Eye, Send, Trash2, Loader2, AlertCircle, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -257,10 +258,12 @@ const Anketa: React.FC = () => {
     e.preventDefault();
 
     const validationErrors = validateForm(sections, formData, contactData, language, additionalData);
+    const phoneErr = getContactPhoneErrorMessage(contactData, language);
+    if (phoneErr) validationErrors.phone = phoneErr;
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      toast.error(t('required'));
+      toast.error(phoneErr ?? t('required'));
       // Scroll to first error
       const firstErrorField = document.querySelector('[data-error="true"]');
       firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -272,15 +275,24 @@ const Anketa: React.FC = () => {
       return;
     }
 
+    const phoneBlock = getContactPhoneErrorMessage(contactData, language);
+    if (phoneBlock) {
+      setErrors((prev) => ({ ...prev, phone: phoneBlock }));
+      toast.error(phoneBlock);
+      document.querySelector('[data-contact-section]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Берём актуальный список файлов (ref обновляется сразу при выборе)
     const filesToSend = attachmentFilesRef.current.slice();
 
     try {
-      const result = await sendToTelegram(markdown);
+      const result = await sendToTelegram(markdown, contactData);
       if (!result.success) {
-        const errorMsg = result.error || t('submitError');
+        const errorMsg =
+          result.error === 'PHONE_REQUIRED' ? t('phoneRequired') : result.error || t('submitError');
         console.error('Failed to send form:', errorMsg);
         toast.error(errorMsg, { duration: 5000 });
         return;

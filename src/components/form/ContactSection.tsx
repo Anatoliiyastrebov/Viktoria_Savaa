@@ -68,6 +68,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ contactData, onP
           type="tel"
           inputMode="tel"
           autoComplete="tel"
+          required
+          aria-required="true"
           className={cn('input-field', errors.phone ? 'input-error' : '')}
           value={contactData.phone}
           onChange={(e) => onPatch({ phone: e.target.value })}

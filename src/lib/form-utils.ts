@@ -194,6 +194,30 @@ export const validatePhoneInput = (raw: string): ContactValidation => {
   return { valid: true };
 };
 
+export const normalizePhoneInput = (raw: string | undefined | null): string =>
+  String(raw ?? '')
+    .trim()
+    .replace(/\s/g, '');
+
+export function isContactPhoneValid(contactData: ContactData): boolean {
+  const s = normalizePhoneInput(contactData?.phone);
+  if (!s) return false;
+  return validatePhoneInput(s).valid;
+}
+
+/** Human-readable phone error for forms; null if OK */
+export function getContactPhoneErrorMessage(contactData: ContactData, lang: Language): string | null {
+  if (isContactPhoneValid(contactData)) return null;
+  const tr = translations[lang] as Record<string, string>;
+  const s = normalizePhoneInput(contactData?.phone);
+  if (!s) return tr.phoneRequired ?? tr.required;
+  const pr = validatePhoneInput(s);
+  if (!pr.valid && pr.error && pr.error !== 'empty') {
+    return tr[pr.error] || tr.phoneRequired || tr.required;
+  }
+  return tr.phoneRequired ?? tr.required;
+}
+
 // Validate form
 export const validateForm = (
   sections: QuestionnaireSection[],
@@ -371,23 +395,19 @@ export const validateForm = (
 
   const tr = t as Record<string, string>;
 
-  if (!contactData.phone.trim()) {
-    errors['phone'] = tr.phoneRequired ?? tr.required;
-  } else {
-    const pr = validatePhoneInput(contactData.phone);
-    if (!pr.valid && pr.error && pr.error !== 'empty') {
-      errors['phone'] = tr[pr.error] || t.required;
-    }
-  }
+  const phoneErr = getContactPhoneErrorMessage(contactData, lang);
+  if (phoneErr) errors['phone'] = phoneErr;
 
-  if (contactData.telegram.trim()) {
-    const r = validateTelegramAtFormat(contactData.telegram);
+  const telegramRaw = String(contactData?.telegram ?? '').trim();
+  if (telegramRaw) {
+    const r = validateTelegramAtFormat(String(contactData?.telegram ?? ''));
     if (!r.valid && r.error && r.error !== 'empty') {
       errors['telegram'] = tr[r.error] || t.required;
     }
   }
-  if (contactData.instagram.trim()) {
-    const r = validateInstagramInput(contactData.instagram);
+  const instagramRaw = String(contactData?.instagram ?? '').trim();
+  if (instagramRaw) {
+    const r = validateInstagramInput(String(contactData?.instagram ?? ''));
     if (!r.valid && r.error && r.error !== 'empty') {
       errors['instagram'] = tr[r.error] || t.required;
     }
@@ -522,7 +542,13 @@ export const generateMarkdown = (
   return md;
 };
 
-export const sendToTelegram = async (markdown: string): Promise<{ success: boolean; error?: string }> => {
+export const sendToTelegram = async (
+  markdown: string,
+  contactData?: ContactData
+): Promise<{ success: boolean; error?: string }> => {
+  if (contactData && !isContactPhoneValid(contactData)) {
+    return { success: false, error: 'PHONE_REQUIRED' };
+  }
   const creds = getTelegramCredentials();
   if ('error' in creds) return { success: false, error: creds.error };
 
