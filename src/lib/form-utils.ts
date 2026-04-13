@@ -20,7 +20,7 @@ export interface ContactData {
 }
 
 const emptyContactData = (): ContactData => ({
-  preferredContactMethod: '',
+  preferredContactMethod: 'phone',
   telegram: '',
   instagram: '',
   phone: '',
@@ -50,6 +50,19 @@ export const extractInstagramUsername = (raw: string): string | null => {
   return null;
 };
 
+function normalizePreferredContactMethod(
+  rawPref: unknown,
+  telegram: string,
+  instagram: string
+): PreferredContactMethod {
+  const p = String(rawPref ?? '').trim() as PreferredContactMethod;
+  if (p === 'telegram' && telegram.trim()) return 'telegram';
+  if (p === 'instagram' && instagram.trim()) return 'instagram';
+  if (p === 'telegram' || p === 'instagram') return 'phone';
+  if (p === 'phone') return 'phone';
+  return 'phone';
+}
+
 export function migrateContactData(raw: unknown): ContactData {
   const base = emptyContactData();
   if (!raw || typeof raw !== 'object') return base;
@@ -59,7 +72,7 @@ export function migrateContactData(raw: unknown): ContactData {
   const phone = String(o.phone ?? '').trim().replace(/\s/g, '');
 
   return {
-    preferredContactMethod: '',
+    preferredContactMethod: normalizePreferredContactMethod(o.preferredContactMethod, telegram, instagram),
     telegram,
     instagram,
     phone,
@@ -515,19 +528,22 @@ export const generateMarkdown = (
   }
 
   const contacts: string[] = [];
-  if (contactData.phone && contactData.phone.trim() !== '') {
-    const ph = contactData.phone.trim().replace(/\s/g, '');
+  const phoneStr = String(contactData?.phone ?? '').trim();
+  if (phoneStr !== '') {
+    const ph = phoneStr.replace(/\s/g, '');
     contacts.push(
       `📞 ${lang === 'ru' ? 'Телефон (основной)' : 'Phone (primary)'}: ${ph}`,
     );
   }
-  if (contactData.telegram && contactData.telegram.trim() !== '') {
-    const cleanTelegram = contactData.telegram.replace(/^@/, '').trim();
+  const telegramStr = String(contactData?.telegram ?? '').trim();
+  if (telegramStr !== '') {
+    const cleanTelegram = telegramStr.replace(/^@/, '').trim();
     contacts.push(`📱 Telegram: @${cleanTelegram}\n🔗 https://t.me/${cleanTelegram}`);
   }
-  if (contactData.instagram && contactData.instagram.trim() !== '') {
-    const igUser = extractInstagramUsername(contactData.instagram);
-    const cleanInstagram = igUser || contactData.instagram.replace(/^@/, '').trim();
+  const instagramStr = String(contactData?.instagram ?? '').trim();
+  if (instagramStr !== '') {
+    const igUser = extractInstagramUsername(instagramStr);
+    const cleanInstagram = igUser || instagramStr.replace(/^@/, '').trim();
     contacts.push(`📷 Instagram: @${cleanInstagram}\n🔗 https://instagram.com/${cleanInstagram}`);
   }
 

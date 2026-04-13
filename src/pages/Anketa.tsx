@@ -51,7 +51,7 @@ const Anketa: React.FC = () => {
   const [formData, setFormData] = useState<QuestionnaireFormData>({});
   const [additionalData, setAdditionalData] = useState<FormAdditionalData>({});
   const [contactData, setContactData] = useState<ContactData>({
-    preferredContactMethod: '',
+    preferredContactMethod: 'phone',
     telegram: '',
     instagram: '',
     phone: '',
@@ -223,7 +223,7 @@ const Anketa: React.FC = () => {
     setFormData({});
     setAdditionalData({});
     setContactData({
-      preferredContactMethod: '',
+      preferredContactMethod: 'phone',
       telegram: '',
       instagram: '',
       phone: '',
