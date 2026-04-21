@@ -9,6 +9,33 @@ import {
   generatePlainTextForPdf,
 } from './form-utils';
 
+/** Безопасное имя файла: без путей и недопустимых символов. */
+function sanitizeFileNameBase(raw: string, maxLen: number): string {
+  return raw
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^[._]+|[._]+$/g, '')
+    .slice(0, maxLen);
+}
+
+/**
+ * PDF: «Имя_Фамилия_дата» по полям name и last_name; если пусто — anketa_тип_дата.
+ */
+function pdfFileName(
+  type: QuestionnaireType,
+  formData: QuestionnaireFormData,
+): string {
+  const dateStamp = format(new Date(), 'yyyy-MM-dd');
+  const first = sanitizeFileNameBase(String(formData['name'] ?? '').trim(), 60);
+  const last = sanitizeFileNameBase(String(formData['last_name'] ?? '').trim(), 60);
+  const parts = [first, last].filter((p) => p.length > 0);
+  if (parts.length === 0) {
+    return `anketa_${type}_${dateStamp}.pdf`;
+  }
+  return `${parts.join('_')}_${dateStamp}.pdf`;
+}
+
 export interface BuildQuestionnairePdfParams {
   type: QuestionnaireType;
   sections: QuestionnaireSection[];
@@ -17,11 +44,6 @@ export interface BuildQuestionnairePdfParams {
   contactData: ContactData;
   lang: Language;
   sourceData?: SourceData;
-}
-
-function pdfFileName(type: QuestionnaireType): string {
-  const stamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
-  return `anketa_${type}_${stamp}.pdf`;
 }
 
 /**
@@ -67,7 +89,7 @@ export async function buildQuestionnairePdfFile(params: BuildQuestionnairePdfPar
   wrapper.appendChild(pre);
   document.body.appendChild(wrapper);
 
-  const name = pdfFileName(type);
+  const name = pdfFileName(type, formData);
 
   try {
     const blob = (await html2pdf()
