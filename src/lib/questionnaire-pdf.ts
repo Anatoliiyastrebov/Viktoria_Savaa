@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
-import { jsPDF } from 'jspdf';
 import type { QuestionnaireSection, QuestionnaireType } from './questionnaire-data';
+import type { jsPDF as JsPDFType } from 'jspdf';
 import type { Language } from './translations';
 import {
   type ContactData,
@@ -42,7 +42,7 @@ async function loadDejaVuBase64IfNeeded(): Promise<string> {
 }
 
 /** Каждый новый jsPDF — своя VFS, шрифт регистрируем заново. */
-function registerDejaVuOnDoc(doc: jsPDF, b64: string) {
+function registerDejaVuOnDoc(doc: JsPDFType, b64: string) {
   doc.addFileToVFS(DEJAVU_VFS, b64);
   doc.addFont(DEJAVU_VFS, DEJAVU_KEY, 'normal', undefined, 'Identity-H');
   doc.setFont(DEJAVU_KEY, 'normal');
@@ -53,7 +53,7 @@ function registerDejaVuOnDoc(doc: jsPDF, b64: string) {
  * Кладёт многострочный UTF-8 текст в PDF (перенос по ширине, разрыв страниц).
  * Без рендера в canvas — стабильно в Telegram и в браузерах.
  */
-function writeTextToPdfPages(doc: jsPDF, text: string, lineHeightMm: number) {
+function writeTextToPdfPages(doc: JsPDFType, text: string, lineHeightMm: number) {
   const marginMm = 12;
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -86,8 +86,9 @@ function writeTextToPdfPages(doc: jsPDF, text: string, lineHeightMm: number) {
 
 /** Безопасное имя файла: без путей и недопустимых символов. */
 function sanitizeFileNameBase(raw: string, maxLen: number): string {
-  return raw
-    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+  let s = raw.replace(/[<>:"/\\|?*]/g, '');
+  s = s.split('').filter((ch) => ch >= ' ').join('');
+  return s
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^[._]+|[._]+$/g, '')
@@ -136,8 +137,9 @@ export async function buildQuestionnairePdfFile(params: BuildQuestionnairePdfPar
     sourceData,
   );
 
+  const { default: JsPDF } = await import('jspdf');
   const fileName = pdfFileName(type, formData);
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const b64 = await loadDejaVuBase64IfNeeded();
   registerDejaVuOnDoc(doc, b64);
 

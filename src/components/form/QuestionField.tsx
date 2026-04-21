@@ -140,7 +140,7 @@ export const QuestionField: React.FC<QuestionFieldProps> = ({
           </div>
         );
 
-      case 'checkbox':
+      case 'checkbox': {
         const currentValues = Array.isArray(value) ? value : [];
         return (
           <div className="flex flex-wrap gap-3">
@@ -165,6 +165,7 @@ export const QuestionField: React.FC<QuestionFieldProps> = ({
             ))}
           </div>
         );
+      }
 
       default:
         return null;
@@ -209,7 +210,7 @@ export const QuestionField: React.FC<QuestionFieldProps> = ({
 
   const showOtherField = hasOtherSelected();
   const currentValuesForLabel = question.type === 'checkbox' ? (Array.isArray(value) ? value : []) : [];
-  const useGenericOtherLabel = (qId: string) => {
+  const getContextualOtherLabel = (qId: string) => {
     if (qId === 'weight_satisfaction') return !currentValuesForLabel.includes('want_to_lose') && !currentValuesForLabel.includes('want_to_gain');
     if (qId === 'stones') return !currentValuesForLabel.includes('stones_kidneys') && !currentValuesForLabel.includes('stones_gallbladder') && !currentValuesForLabel.includes('both');
     if (qId === 'operations_injuries') return !currentValuesForLabel.includes('operations') && !currentValuesForLabel.includes('organ_removed') && !currentValuesForLabel.includes('injuries');
@@ -248,15 +249,15 @@ export const QuestionField: React.FC<QuestionFieldProps> = ({
               ? (language === 'ru' ? 'Опишите подробнее' : 'Describe in detail')
               : question.id === 'illness_antibiotics'
               ? (language === 'ru' ? 'Укажите названия лекарств' : 'Specify the names of medications')
-              : question.id === 'weight_satisfaction' && !useGenericOtherLabel('weight_satisfaction')
+              : question.id === 'weight_satisfaction' && !getContextualOtherLabel('weight_satisfaction')
               ? (language === 'ru' ? 'Сколько хотите сбросить или набрать (кг)?' : 'How much to lose or gain (kg)?')
-              : question.id === 'stones' && !useGenericOtherLabel('stones')
+              : question.id === 'stones' && !getContextualOtherLabel('stones')
               ? (language === 'ru' ? 'Размер камней (если известен)' : 'Stone size (if known)')
-              : question.id === 'operations_injuries' && !useGenericOtherLabel('operations_injuries')
+              : question.id === 'operations_injuries' && !getContextualOtherLabel('operations_injuries')
               ? (language === 'ru' ? 'Опишите операции, удалённые органы и травмы' : 'Describe operations, removed organs and injuries')
-              : question.id === 'pressure' && !useGenericOtherLabel('pressure')
+              : question.id === 'pressure' && !getContextualOtherLabel('pressure')
               ? (language === 'ru' ? 'Какие лекарства принимаете и как долго?' : 'Which medications and for how long?')
-              : question.id === 'cysts_polyps' && !useGenericOtherLabel('cysts_polyps')
+              : question.id === 'cysts_polyps' && !getContextualOtherLabel('cysts_polyps')
               ? (language === 'ru' ? 'Подробности (размер, локализация)' : 'Details (size, location)')
               : (t('otherDetails') || 'Уточните, что именно')}
             {additionalError && <span className="text-destructive ml-1">*</span>}
@@ -265,15 +266,15 @@ export const QuestionField: React.FC<QuestionFieldProps> = ({
             className={`input-field text-sm min-h-[60px] resize-y ${additionalError ? 'input-error' : ''}`}
             value={additionalValue}
             onChange={(e) => onAdditionalChange(e.target.value)}
-            placeholder={question.id === 'weight_satisfaction' && !useGenericOtherLabel('weight_satisfaction')
+            placeholder={question.id === 'weight_satisfaction' && !getContextualOtherLabel('weight_satisfaction')
               ? (language === 'ru' ? 'Например: 5 кг' : 'E.g. 5 kg')
-              : question.id === 'stones' && !useGenericOtherLabel('stones')
+              : question.id === 'stones' && !getContextualOtherLabel('stones')
               ? (language === 'ru' ? 'Например: 3 мм' : 'E.g. 3 mm')
-              : question.id === 'operations_injuries' && !useGenericOtherLabel('operations_injuries')
+              : question.id === 'operations_injuries' && !getContextualOtherLabel('operations_injuries')
               ? (language === 'ru' ? 'Операции, удалённые органы, травмы' : 'Operations, removed organs, injuries')
-              : question.id === 'pressure' && !useGenericOtherLabel('pressure')
+              : question.id === 'pressure' && !getContextualOtherLabel('pressure')
               ? (language === 'ru' ? 'Название препарата, срок приёма' : 'Medication name, duration')
-              : question.id === 'cysts_polyps' && !useGenericOtherLabel('cysts_polyps')
+              : question.id === 'cysts_polyps' && !getContextualOtherLabel('cysts_polyps')
               ? (language === 'ru' ? 'Размер, где расположено' : 'Size, location')
               : question.id === 'medications'
               ? (language === 'ru' ? 'Название лекарств' : 'Medication names')
