@@ -558,6 +558,145 @@ export const generateMarkdown = (
   return md;
 };
 
+/**
+ * Тот же контент, что в generateMarkdown, в виде обычного текста (для PDF).
+ * При правках логики анкеты синхронизировать с generateMarkdown.
+ */
+export const generatePlainTextForPdf = (
+  type: QuestionnaireType,
+  sections: QuestionnaireSection[],
+  formData: QuestionnaireFormData,
+  additionalData: FormAdditionalData,
+  contactData: ContactData,
+  lang: Language,
+  sourceData?: SourceData
+): string => {
+  const t = translations[lang];
+  const headers = {
+    infant: t.mdInfant,
+    child: t.mdChild,
+    woman: t.mdWoman,
+    man: t.mdMan,
+  };
+
+  const dateStr = format(new Date(), 'dd.MM.yyyy, HH:mm');
+  const lines: string[] = [];
+  lines.push(
+    lang === 'ru' ? `Новая анкета: ${headers[type]}` : `New questionnaire: ${headers[type]}`,
+    lang === 'ru' ? `Дата: ${dateStr}` : `Date: ${dateStr}`,
+    '',
+  );
+
+  let questionNumber = 1;
+  let healthSectionStarted = false;
+  let isFirstSection = true;
+
+  sections.forEach((section) => {
+    const hasAnswers = section.questions.some((question) => {
+      const value = formData[question.id];
+      return value && (Array.isArray(value) ? value.length > 0 : value.trim() !== '');
+    });
+
+    if (!hasAnswers) return;
+
+    if (!isFirstSection) lines.push('');
+    lines.push(section.title[lang]);
+    lines.push('');
+    isFirstSection = false;
+
+    if (section.id === 'health') {
+      healthSectionStarted = true;
+    }
+
+    section.questions.forEach((question) => {
+      const value = formData[question.id];
+      const additional = additionalData[`${question.id}_additional`];
+
+      if (value && (Array.isArray(value) ? value.length > 0 : value.trim() !== '')) {
+        const label = question.label[lang];
+        let questionPrefix = '';
+        if (healthSectionStarted) {
+          questionPrefix = `${questionNumber}. `;
+          questionNumber++;
+        }
+
+        let answerText = '';
+        if (Array.isArray(value)) {
+          const optionLabels = value.map((v) => {
+            const opt = question.options?.find((o) => o.value === v);
+            return opt ? opt.label[lang] : v;
+          });
+          answerText = optionLabels.join(', ');
+        } else if (question.options) {
+          const opt = question.options.find((o) => o.value === value);
+          answerText = opt ? opt.label[lang] : value;
+        } else {
+          answerText = value;
+        }
+
+        lines.push(`${questionPrefix}${label}`);
+        lines.push(
+          lang === 'ru' ? `   Ответ: ${answerText}` : `   Answer: ${answerText}`,
+        );
+        if (additional && additional.trim() !== '') {
+          lines.push(
+            lang === 'ru' ? `   Уточнение: ${additional.trim()}` : `   Note: ${additional.trim()}`,
+          );
+        }
+        lines.push('');
+      }
+    });
+  });
+
+  if (sourceData?.source) {
+    const sourceLabels = {
+      telegram: 'Telegram',
+      instagram: 'Instagram',
+      recommendation: lang === 'ru' ? 'По рекомендации' : 'By recommendation',
+    };
+    const srcLine = lang === 'ru' ? 'Откуда узнали' : 'Source';
+    lines.push(
+      `${srcLine}: ${sourceLabels[sourceData.source as keyof typeof sourceLabels] || sourceData.source}`,
+    );
+    if (sourceData.source === 'recommendation' && sourceData.recommender?.trim()) {
+      lines.push(
+        lang === 'ru'
+          ? `   Рекомендовал(а): ${sourceData.recommender.trim()}`
+          : `   Recommended by: ${sourceData.recommender.trim()}`,
+      );
+    }
+    lines.push('');
+  }
+
+  const phoneStr = String(contactData?.phone ?? '').trim();
+  const telegramStr = String(contactData?.telegram ?? '').trim();
+  const instagramStr = String(contactData?.instagram ?? '').trim();
+  if (phoneStr || telegramStr || instagramStr) {
+    lines.push('────────────────────────');
+    lines.push(t.mdContacts);
+    lines.push('');
+  }
+  if (phoneStr !== '') {
+    const ph = phoneStr.replace(/\s/g, '');
+    lines.push(
+      lang === 'ru' ? `Телефон (основной): ${ph}` : `Phone (primary): ${ph}`,
+    );
+  }
+  if (telegramStr !== '') {
+    const cleanTelegram = telegramStr.replace(/^@/, '').trim();
+    lines.push(`Telegram: @${cleanTelegram} — https://t.me/${cleanTelegram}`);
+  }
+  if (instagramStr !== '') {
+    const igUser = extractInstagramUsername(instagramStr);
+    const cleanInstagram = igUser || instagramStr.replace(/^@/, '').trim();
+    lines.push(
+      `Instagram: @${cleanInstagram} — https://instagram.com/${cleanInstagram}`,
+    );
+  }
+
+  return lines.join('\n').replace(/\n+$/, '\n');
+};
+
 export const sendToTelegram = async (
   markdown: string,
   contactData?: ContactData

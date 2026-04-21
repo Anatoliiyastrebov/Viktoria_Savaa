@@ -29,6 +29,7 @@ import {
   sendDocumentToTelegram,
   getContactPhoneErrorMessage,
 } from '@/lib/form-utils';
+import { buildQuestionnairePdfFile } from '@/lib/questionnaire-pdf';
 import { Eye, Send, Trash2, Loader2, AlertCircle, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -297,6 +298,43 @@ const Anketa: React.FC = () => {
         toast.error(errorMsg, { duration: 5000 });
         return;
       }
+
+      let pdfFile: File;
+      try {
+        pdfFile = await buildQuestionnairePdfFile({
+          type,
+          sections,
+          formData,
+          additionalData,
+          contactData,
+          lang: language,
+          sourceData,
+        });
+      } catch (pdfBuildErr) {
+        console.error('PDF build error:', pdfBuildErr);
+        toast.error(
+          language === 'ru'
+            ? 'Не удалось сформировать PDF. Попробуйте ещё раз или откройте сайт в другом браузере.'
+            : 'Could not generate PDF. Please try again or use another browser.',
+          { duration: 6000 },
+        );
+        return;
+      }
+
+      const pdfResult = await sendDocumentToTelegram(
+        pdfFile,
+        language === 'ru' ? 'Полный текст анкеты (PDF)' : 'Full questionnaire (PDF)',
+      );
+      if (!pdfResult.success) {
+        toast.error(
+          language === 'ru'
+            ? `Сообщение в Telegram отправлено, но PDF не прикреплён: ${pdfResult.error ?? ''}`
+            : `Message sent, but PDF failed: ${pdfResult.error ?? ''}`,
+          { duration: 6000 },
+        );
+        return;
+      }
+
       for (const file of filesToSend) {
         const docResult = await sendDocumentToTelegram(file, title);
         if (!docResult.success) {
