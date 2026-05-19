@@ -9,12 +9,12 @@
 3. Проверьте:
    - ✅ **Production Branch** должна быть `main` (не `master`)
    - ✅ **Automatic deployments from Git** должна быть включена
-   - ✅ Репозиторий должен быть `Anatoliiyastrebov/projekty`
+   - ✅ Репозиторий должен быть `Anatoliiyastrebov/Viktoria_Savaa`
 
 ### ✅ Шаг 2: Проверьте последний коммит в GitHub
 
 Убедитесь, что последние изменения действительно в GitHub:
-- Откройте https://github.com/Anatoliiyastrebov/projekty
+- Откройте https://github.com/Anatoliiyastrebov/Viktoria_Savaa
 - Проверьте последний коммит в ветке `main`
 - Убедитесь, что изменения там есть
 
@@ -58,12 +58,12 @@
 2. Нажмите **"Disconnect"** для репозитория
 3. Подождите несколько секунд
 4. Нажмите **"Connect Git Repository"**
-5. Выберите `Anatoliiyastrebov/projekty`
+5. Выберите `Anatoliiyastrebov/Viktoria_Savaa`
 6. Подтвердите подключение
 
 ### ✅ Шаг 8: Проверьте webhook в GitHub
 
-1. Откройте https://github.com/Anatoliiyastrebov/projekty/settings/hooks
+1. Откройте https://github.com/Anatoliiyastrebov/Viktoria_Savaa/settings/hooks
 2. Проверьте, есть ли webhook от Vercel
 3. Если нет - Vercel должен создать его автоматически при подключении
 
