@@ -12,7 +12,13 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} Виктория Савая — Анкета по здоровью
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
+            <Link
+              to="/kalkulyator-kalorij"
+              className="hover:text-foreground transition-colors"
+            >
+              {language === 'ru' ? 'Калькулятор калорий' : 'Calorie calculator'}
+            </Link>
             <Link
               to="/impressum"
               className="hover:text-foreground transition-colors"

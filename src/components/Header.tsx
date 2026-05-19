@@ -37,7 +37,15 @@ export const Header: React.FC = () => {
             {t('siteTitle')}
           </span>
         </Link>
-        <LanguageSwitcher />
+        <nav className="flex items-center gap-3 sm:gap-5" aria-label={language === 'ru' ? 'Навигация' : 'Navigation'}>
+          <Link
+            to={`/kalkulyator-kalorij?lang=${language}`}
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden md:inline"
+          >
+            {language === 'ru' ? 'Калькулятор калорий' : 'Calorie calculator'}
+          </Link>
+          <LanguageSwitcher />
+        </nav>
       </div>
     </header>
   );

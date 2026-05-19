@@ -3,7 +3,8 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { CategoryCard } from '@/components/CategoryCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, Calculator } from 'lucide-react';
 
 const TELEGRAM_CHANNEL_URL = 'https://t.me/beautifulyuo';
 
@@ -14,7 +15,7 @@ const TelegramIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const Index: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,7 +69,31 @@ const Index: React.FC = () => {
           </div>
         </section>
 
-        <section className="max-w-2xl mx-auto mt-14 mb-4 animate-fade-in" aria-labelledby="channel-invite-heading">
+        <section className="max-w-2xl mx-auto mt-12 animate-fade-in">
+          <Link
+            to={`/kalkulyator-kalorij?lang=${language}`}
+            className="group flex flex-col sm:flex-row items-center gap-4 rounded-2xl border border-border bg-card p-6 md:p-7 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:border-primary/40 transition-all"
+          >
+            <div className="rounded-xl bg-primary/10 p-3 text-primary shrink-0">
+              <Calculator className="w-8 h-8" aria-hidden />
+            </div>
+            <div className="text-center sm:text-left flex-1">
+              <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                {language === 'ru' ? 'Калькулятор суточной нормы калорий' : 'Daily calorie calculator'}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                {language === 'ru'
+                  ? 'Рассчитайте ПБМ и калории для похудения, поддержания веса или набора массы'
+                  : 'Calculate BMR and calories for weight loss, maintenance, or muscle gain'}
+              </p>
+            </div>
+            <span className="text-sm font-medium text-primary shrink-0">
+              {language === 'ru' ? 'Открыть →' : 'Open →'}
+            </span>
+          </Link>
+        </section>
+
+        <section className="max-w-2xl mx-auto mt-10 mb-4 animate-fade-in" aria-labelledby="channel-invite-heading">
           <div className="rounded-2xl border-2 border-primary/25 bg-gradient-to-br from-card via-card to-primary/[0.06] p-6 md:p-8 shadow-[var(--shadow-card)] text-center space-y-5">
             <h2 id="channel-invite-heading" className="text-lg md:text-xl font-semibold text-foreground leading-snug">
               {t('channelInviteLead')}

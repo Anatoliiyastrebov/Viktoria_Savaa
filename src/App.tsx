@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Impressum from "./pages/Impressum";
+import CalorieCalculator from "./pages/CalorieCalculator";
 
 const Anketa = lazy(() => import("./pages/Anketa"));
 const Success = lazy(() => import("./pages/Success"));
@@ -30,6 +31,7 @@ const App = () => (
           >
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/kalkulyator-kalorij" element={<CalorieCalculator />} />
               <Route path="/anketa" element={<Anketa />} />
               <Route path="/success" element={<Success />} />
               <Route path="/impressum" element={<Impressum />} />
