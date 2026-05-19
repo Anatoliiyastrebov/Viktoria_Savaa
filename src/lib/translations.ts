@@ -30,6 +30,14 @@ export const translations = {
     channelInviteBody2:
       'Про то, как чувствовать себя наполненной, а не просто «держаться».',
     channelJoinButton: 'Присоединиться',
+
+    maxInviteLead:
+      'Также приглашаю в группу Wellness Club | питание и результат в приложении MAX',
+    maxInviteBody1:
+      'Там — про питание, поддержку и заботу о результате в спокойном, понятном формате.',
+    maxInviteBody2:
+      'Удобно, если вам ближе общение в MAX — буду рада видеть вас там.',
+    maxJoinButton: 'Перейти в группу MAX',
     
     // Form labels
     name: 'Имя',
@@ -269,6 +277,14 @@ export const translations = {
     channelInviteBody2:
       'How to feel full and alive — not just «holding on».',
     channelJoinButton: 'Join',
+
+    maxInviteLead:
+      'You are also welcome in the Wellness Club | nutrition & results group on MAX',
+    maxInviteBody1:
+      'Nutrition tips, support, and a calm approach to sustainable results.',
+    maxInviteBody2:
+      'A good option if you prefer staying in touch via the MAX app.',
+    maxJoinButton: 'Open group in MAX',
     
     // Form labels
     name: 'Name',

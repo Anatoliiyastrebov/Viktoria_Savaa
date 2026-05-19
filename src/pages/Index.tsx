@@ -5,8 +5,22 @@ import { CategoryCard } from '@/components/CategoryCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
 import { Sparkles, Calculator } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const TELEGRAM_CHANNEL_URL = 'https://t.me/beautifulyuo';
+const MAX_GROUP_URL = 'https://max.ru/join/0Tw3VcMu3cABmFG1IQryGKVmidiv6PwKRbdzpoHeKoY';
+
+const MaxIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <span
+    aria-hidden
+    className={cn(
+      'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md bg-[#258cfb] px-1 text-[10px] font-bold leading-none text-white',
+      className,
+    )}
+  >
+    MAX
+  </span>
+);
 
 const TelegramIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -110,6 +124,33 @@ const Index: React.FC = () => {
             >
               <TelegramIcon className="w-5 h-5" />
               {t('channelJoinButton')}
+            </a>
+          </div>
+        </section>
+
+        <section
+          className="max-w-2xl mx-auto mt-6 mb-4 animate-fade-in"
+          aria-labelledby="max-group-invite-heading"
+        >
+          <div className="rounded-2xl border-2 border-[#258cfb]/30 bg-gradient-to-br from-card via-card to-[#258cfb]/[0.06] p-6 md:p-8 shadow-[var(--shadow-card)] text-center space-y-5">
+            <h2
+              id="max-group-invite-heading"
+              className="text-lg md:text-xl font-semibold text-foreground leading-snug"
+            >
+              {t('maxInviteLead')}
+            </h2>
+            <div className="space-y-3 text-muted-foreground text-base md:text-lg leading-relaxed text-left max-w-xl mx-auto">
+              <p>{t('maxInviteBody1')}</p>
+              <p>{t('maxInviteBody2')}</p>
+            </div>
+            <a
+              href={MAX_GROUP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-medium text-white bg-[#258cfb] hover:bg-[#1f7ae0] transition-colors"
+            >
+              <MaxIcon />
+              {t('maxJoinButton')}
             </a>
           </div>
         </section>
